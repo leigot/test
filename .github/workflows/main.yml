@@ -1,0 +1,48 @@
+name: Sync
+
+on:
+  schedule:
+    #- cron:  '0 18 * * 4'
+   - cron: '*/30 * * * *'
+    
+  workflow_dispatch:  
+  
+jobs:
+  start:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.PAT }}
+      UPSTREAM_REPOSITORY: ${{ secrets.GC }}
+      TARGET_REPOSITORY: ${{ secrets.GO }}
+      TARGET_BRANCH: main
+      UPSTREAM_BRANCH: main
+    steps:
+      - name: Sync
+        run: |
+          upstream_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${UPSTREAM_REPOSITORY}.git"
+          upstream_dir=${UPSTREAM_REPOSITORY##*/}
+          target_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${TARGET_REPOSITORY}.git"
+          git clone "${upstream_repo}" -b "${UPSTREAM_BRANCH}" --single-branch
+          cd "${upstream_dir}"
+          git push --force --follow-tags --tags "${target_repo}" "${UPSTREAM_BRANCH}:${TARGET_BRANCH}"
+          rm -rf "../${upstream_dir}"                
+
+  sync:
+    runs-on: ubuntu-latest
+    needs: start
+    env:
+      GITHUB_TOKEN: ${{ secrets.PAT }}
+      UPSTREAM_REPOSITORY: ${{ secrets.UR }}
+      TARGET_REPOSITORY: ${{ secrets.TR }}
+      TARGET_BRANCH: main
+      UPSTREAM_BRANCH: main
+    steps:
+      - name: Sync
+        run: |
+          upstream_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${UPSTREAM_REPOSITORY}.git"
+          upstream_dir=${UPSTREAM_REPOSITORY##*/}
+          target_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${TARGET_REPOSITORY}.git"
+          git clone "${upstream_repo}" -b "${UPSTREAM_BRANCH}" --single-branch
+          cd "${upstream_dir}"
+          git push --force --follow-tags --tags "${target_repo}" "${UPSTREAM_BRANCH}:${TARGET_BRANCH}"
+          rm -rf "../${upstream_dir}"   
